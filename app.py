@@ -27,7 +27,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Socket.IO — cors_allowed_origins "*" setara { cors: { origin: "*" } } di Node
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 # Pastikan folder uploads ada (untuk kebutuhan lokal, seperti fs.existsSync di Node)
 if not os.path.exists("uploads"):
