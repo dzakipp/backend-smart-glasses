@@ -44,8 +44,6 @@ cloudinary.config(
 
 
 def photo_to_dict(photo):
-    """Ubah dokumen MongoDB jadi JSON yang formatnya sama seperti versi Node
-    (field _id sebagai string, imageUrl, createdAt)."""
     return {
         "_id": str(photo["_id"]),
         "imageUrl": photo.get("imageUrl"),
