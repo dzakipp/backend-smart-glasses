@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
 
-# ── Load environment variables ─────────────────────────────
 load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI")
@@ -20,20 +19,15 @@ API_KEY = os.getenv("API_KEY")
 API_SECRET = os.getenv("API_SECRET")
 PORT = int(os.getenv("PORT", 5000))
 
-# ── App & extensions ────────────────────────────────────────
 app = Flask(__name__)
 
-# CORS — izinkan semua origin (setara app.use((req,res,next)=>{...}) di Express)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Socket.IO — cors_allowed_origins "*" setara { cors: { origin: "*" } } di Node
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
-# Pastikan folder uploads ada (untuk kebutuhan lokal, seperti fs.existsSync di Node)
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
 
-# ── MongoDB ─────────────────────────────────────────────────
 try:
     mongo_client = MongoClient(MONGO_URI)
     db = mongo_client.get_default_database()
@@ -42,7 +36,6 @@ try:
 except Exception as e:
     print("MongoDB error:", e)
 
-# ── Cloudinary ──────────────────────────────────────────────
 cloudinary.config(
     cloud_name=CLOUD_NAME,
     api_key=API_KEY,
@@ -50,7 +43,6 @@ cloudinary.config(
 )
 
 
-# ── Helpers ─────────────────────────────────────────────────
 def photo_to_dict(photo):
     """Ubah dokumen MongoDB jadi JSON yang formatnya sama seperti versi Node
     (field _id sebagai string, imageUrl, createdAt)."""
@@ -61,20 +53,17 @@ def photo_to_dict(photo):
     }
 
 
-# ── Routes ──────────────────────────────────────────────────
 
-# Test koneksi ESP32
 @app.route("/test", methods=["GET"])
 def test_connection():
     print("ESP32 terhubung")
     return "OK"
 
 
-# Upload foto dari ESP32 → simpan ke Cloudinary → simpan ke MongoDB
 @app.route("/upload", methods=["POST"])
 def upload_photo():
     try:
-        buffer = request.get_data()  # raw bytes, setara express.raw({type:"image/jpeg"})
+        buffer = request.get_data()  
 
         if not buffer or len(buffer) == 0:
             return jsonify({"error": "Buffer kosong"}), 400
@@ -102,7 +91,6 @@ def upload_photo():
         return jsonify({"error": str(e)}), 500
 
 
-# Ambil semua foto (terbaru duluan)
 @app.route("/photos", methods=["GET"])
 def get_photos():
     try:
@@ -112,7 +100,6 @@ def get_photos():
         return jsonify({"error": str(e)}), 500
 
 
-# Hapus foto
 @app.route("/photos/<id>", methods=["DELETE"])
 def delete_photo(id):
     try:
@@ -125,12 +112,10 @@ def delete_photo(id):
         return jsonify({"error": str(e)}), 500
 
 
-# ── Socket ──────────────────────────────────────────────────
 @socketio.on("connect")
 def handle_connect():
     print("Client connected:", request.sid)
 
 
-# ── Entrypoint ──────────────────────────────────────────────
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=PORT, allow_unsafe_werkzeug=True)
